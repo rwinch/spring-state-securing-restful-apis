@@ -1,0 +1,3 @@
+= Curl Example
+
+curl localhost:8080/messages/search/inbox -H "x-auth-token: 8d72398d-4919-44e3-910e-7c2e9e6ea60d"

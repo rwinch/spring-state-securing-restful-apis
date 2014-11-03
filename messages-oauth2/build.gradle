@@ -1,0 +1,61 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.1.5.RELEASE")
+    }
+}
+
+apply plugin: 'spring-boot'
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'spring-boot'
+
+group = 'samples'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+ext.springSecurityVersion = '4.0.0.CI-SNAPSHOT'
+ext.springVersion = '4.1.1.BUILD-SNAPSHOT'
+
+repositories {
+    maven { url 'https://repo.spring.io/libs-snapshot' }
+    maven { url 'http://clojars.org/repo' }
+}
+
+configurations.all {
+    resolutionStrategy {
+        eachDependency { DependencyResolveDetails details ->
+            if (details.requested.group == 'org.springframework') {
+                details.useVersion springVersion
+            }
+            if (details.requested.group.startsWith('org.apache.tomcat')) {
+                details.useVersion '8.0.12'
+            }
+        }
+    }
+}
+
+
+dependencies {
+    compile "org.springframework.boot:spring-boot-starter-web",
+            "org.springframework.boot:spring-boot-starter-data-jpa",
+            "org.springframework.boot:spring-boot-starter-data-rest",
+            "org.springframework.boot:spring-boot-starter-thymeleaf",
+            "com.h2database:h2",
+            "org.springframework.data:spring-data-jpa:1.7.0.RELEASE",
+            "org.springframework.security:spring-security-web:$springSecurityVersion",
+            "org.springframework.security:spring-security-config:$springSecurityVersion",
+            "org.springframework.security:spring-security-messaging:$springSecurityVersion",
+            "org.springframework.security:spring-security-data:$springSecurityVersion",
+            "org.springframework.security.oauth:spring-security-oauth2:2.0.3.RELEASE"
+
+
+    testCompile "org.springframework.boot:spring-boot-starter-test",
+            "org.springframework.security:spring-security-test:$springSecurityVersion"
+
+}
