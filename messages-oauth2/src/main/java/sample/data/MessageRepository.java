@@ -44,7 +44,7 @@ public interface MessageRepository extends CrudRepository<Message, Long> {
 
     @PreAuthorize("authenticated")
     @PostAuthorize("#message?.from?.id == principal?.id && (!#oauth2.oAuth || #oauth2.hasScope('write'))")
-    <S extends Message> S save(@P("message") Message message);
+    <S extends Message> S save(@P("message") S message);
 
     @PreAuthorize("authenticated")
     void delete(Long id);
