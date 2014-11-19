@@ -1,187 +1,201 @@
-function CsrfToken(data) {
-    var self = this;
-    self.headerName = ko.observable(data.headerName);
-    self.token = ko.observable(data.token);
-}
+(function($, ko) {
 
-function User(data) {
-    var self = this;
-    self.href = ko.observable(data._links ? data._links.self.href : '');
-    self.email = ko.observable(data.email);
-    self.password = ko.observable(data.password);
-}
-
-function Message(data) {
-    var self = this;
-    self.href = ko.observable(data._links.self.href);
-    self.text = ko.observable(data.text);
-    self.summary = ko.observable(data.summary);
-    self.created = ko.observable(new Date(data.created));
-    self.to = ko.observable(data.to);
-    self.from = ko.observable(data.from);
-}
-
-function ComposeMessage(data) {
-    var self = this;
-    self.text = ko.observable(data.text);
-    self.summary = ko.observable(data.summary);
-    self.from = ko.observable(data.from);
-    self.toEmail = ko.observable('');
-    self.to = ko.observable('');
-}
-
-function MessageListViewModel() {
-    var self = this;
-    self.messages = ko.observableArray([]);
-    self.chosenMessageData = ko.observable();
-    self.inbox = ko.observable();
-    self.sent = ko.observable();
-    self.compose = ko.observable();
-    self.errors = ko.observableArray([]);
-    self.user = ko.observable(new User([]));
-    self.login = ko.observable();
-    self.csrf = ko.observable(new CsrfToken([]));
-
-    self.goToMessage = function(message) {
-        self.clearPages();
-        $.getJSON(message.href(), function(data) {
-            self.chosenMessageData(new Message(data));
-        });
-    };
-
-    self.goToCompose = function(data) {
-        self.clearPages();
-        self.compose(new ComposeMessage({'from':self.user().href(),'toEmail':'rob@example.com'}));
-    };
-
-    self.goToInbox = function() {
-        self.clearPages();
-        $.getJSON("./messages/search/inbox", function(allData) {
-            var mappedMessages = $.map(allData['_embedded']['messages'], function(item) { return new Message(item) });
-            self.messages(mappedMessages);
-            self.inbox(mappedMessages);
-        });
+    function CsrfToken(data) {
+        this.headerName = ko.observable(data.headerName);
+        this.token = ko.observable(data.token);
     }
 
-    self.goToSent = function() {
-        self.clearPages();
-        $.getJSON("./messages/search/sent", function(allData) {
-            var mappedMessages = $.map(allData['_embedded']['messages'], function(item) { return new Message(item) });
-            self.messages(mappedMessages);
-            self.sent(mappedMessages);
-        });
+    function User(data) {
+        this.href = ko.observable(data._links ? data._links.self.href : '');
+        this.email = ko.observable(data.email);
+        this.password = ko.observable(data.password);
     }
 
-    self.goToLogin = function() {
-        self.clearPages();
-        self.user(new User([]));
-        self.login(new User({email:'rob@example.com',password:'password'}));
+    function Message(data) {
+        this.href = ko.observable(data._links.self.href);
+        this.text = ko.observable(data.text);
+        this.summary = ko.observable(data.summary);
+        this.created = ko.observable(new Date(data.created));
+        this.to = ko.observable(data.to);
+        this.from = ko.observable(data.from);
     }
 
-    self.clearPages = function() {
-        self.login(null);
-        self.inbox(null);
-        self.sent(null);
-        self.compose(null);
-        self.chosenMessageData(null);
+    function ComposeMessage(data) {
+        this.text = ko.observable(data.text);
+        this.summary = ko.observable(data.summary);
+        this.from = ko.observable(data.from);
+        this.toEmail = ko.observable('');
+        this.to = ko.observable('');
     }
 
-    self.save = function() {
-        $.ajax("./users/search/findByEmail", {
-            data: {'email' : self.compose().toEmail() },
-            type: "get", contentType: "application/json",
-            success: function(result) {
-                if(result._embedded) {
-                    self.compose().to(result._embedded.users[0]._links.self.href);
-                    $.ajax("./messages/", {
-                        data: ko.toJSON(self.compose),
-                        type: "post", contentType: "application/json",
-                        success: function(result) {
-                            self.goToInbox();
-                        }
+    function MessageListViewModel() {
+        this.messages = ko.observableArray([]);
+        this.chosenMessageData = ko.observable();
+        this.inbox = ko.observable();
+        this.sent = ko.observable();
+        this.compose = ko.observable();
+        this.errors = ko.observableArray([]);
+        this.user = ko.observable(new User({}));
+        this.login = ko.observable();
+        this.csrf = ko.observable(new CsrfToken({}));
+
+        var self = this;
+
+        self.goToMessage = function(message) {
+            self.clearPages();
+
+            $.getJSON(message.href()).then(function(data) {
+                self.chosenMessageData(new Message(data));
+            });
+        };
+
+        self.goToCompose = function() {
+            self.clearPages();
+            self.compose(new ComposeMessage({
+                from:self.user().href(),
+                toEmail:'rob@example.com'
+            }));
+        };
+
+        self.goToInbox = function() {
+            return self.goToMailbox('messages/search/inbox', self.inbox);
+        };
+
+        self.goToSent = function() {
+            return self.goToMailbox('messages/search/sent', self.sent);
+        };
+
+        self.goToMailbox = function(mailboxUrl, mailbox) {
+            return $.getJSON(mailboxUrl).then(function(allData) {
+                self.clearPages();
+
+                var embedded = allData._embedded;
+                var mappedMessages = !embedded ? []
+                    : embedded.messages.map(function (item) {
+                        return new Message(item);
                     });
-                } else {
-                    self.errors(['Invalid user']);
+
+                self.messages(mappedMessages);
+                mailbox(mappedMessages);
+            });
+        };
+
+        self.goToLogin = function() {
+            self.clearPages();
+            self.user(new User({}));
+            self.login(new User({email:'rob@example.com',password:'password'}));
+        };
+
+        self.clearPages = function() {
+            self.login(null);
+            self.inbox(null);
+            self.sent(null);
+            self.compose(null);
+            self.chosenMessageData(null);
+        };
+
+        self.save = function() {
+            $.ajax('users/search/findByEmail', {
+                data: { email: self.compose().toEmail() },
+                type: 'get', contentType: 'application/json'
+            }).then(function(result) {
+                if(!result._embedded) {
+                    return new $.Deferred().reject(new Error('Invalid user'));
                 }
-            }
-        });
-    };
 
-    self.deleteMessageFromInbox = function(message) {
-        self.deleteMessage(message, self.goToInbox);
-    }
+                self.compose().to(result._embedded.users[0]._links.self.href);
+                return $.ajax('messages', {
+                    data: ko.toJSON(self.compose),
+                    type: 'post', contentType: 'application/json'
+                });
+            }).then(self.goToInbox, function(e) {
+                self.errors([e.message]);
+            });
+        };
 
-    self.deleteMessageFromSent = function(message) {
-        self.deleteMessage(message, self.goToSent);
-    }
+        self.deleteMessageFromInbox = function(message) {
+            self.deleteMessage(message).then(self.goToInbox);
+        };
 
-    self.deleteMessage = function(message, onSuccess) {
-        $.ajax(message.href(), {
-            type: "delete", contentType: "application/json",
-            success: onSuccess
-        });
-    }
+        self.deleteMessageFromSent = function(message) {
+            self.deleteMessage(message).then(self.goToSent);
+        };
 
-    self.performLogin = function() {
-        var username = self.login().email();
-        var password = self.login().password();
-        self.getCurrentUser(username,password);
-    }
+        self.deleteMessage = function(message) {
+            return $.ajax(message.href(), { type: 'delete', contentType: 'application/json'});
+        };
 
-    self.performLogout = function() {
-        $.post("./logout");
-        self.getCurrentUser();
-    }
+        self.performLogin = function() {
+            var login = self.login();
+            return self.getCurrentUser(login.email(),login.password());
+        };
 
-    self.getCurrentUser = function(username, password) {
-        self.user(new User([]));
-        var additionalHeaders = username ? {
-            "Authorization": "Basic " + btoa(username + ":" + password)
-        } : {};
-        $.ajax("./authenticate", {
-            headers: additionalHeaders,
-            type: "get", contentType: "application/json",
-            success: function(result) {
+        self.performLogout = function() {
+            return $.post('logout').then(function() {
+                return self.getCurrentUser();
+            });
+        };
+
+        self.getCurrentUser = function(username, password) {
+            self.user(new User({}));
+
+            var additionalHeaders = username ? {
+                'Authorization': 'Basic ' + btoa(username + ':' + password)
+            } : {};
+
+            return $.ajax('authenticate', {
+                headers: additionalHeaders,
+                type: 'get', contentType: 'application/json'
+            }).then(function(result) {
+                self.csrf(new CsrfToken({}));
                 self.user(new User(result));
-                self.goToInbox();
-                self.getCsrf();
+                return $.when(self.goToInbox(), self.getCsrf());
+            });
+        };
+
+        self.getCsrf = function() {
+            return $.get('csrf', function(data) {
+                self.csrf(new CsrfToken(data));
+            });
+        };
+
+        this.getCurrentUser();
+    }
+
+    $(function () {
+        var messageModel = new MessageListViewModel();
+        initAuthInterceptors(messageModel);
+
+        messageModel.getCurrentUser();
+        ko.applyBindings(messageModel);
+    });
+
+    function initAuthInterceptors (messageModel) {
+        $(document).ajaxSend(function (e, xhr /*, options */) {
+            messageModel.errors.removeAll();
+            xhr.setRequestHeader('Content-type', 'application/json');
+
+            var header = messageModel.csrf().headerName();
+            var token = messageModel.csrf().token();
+            if (token) {
+                xhr.setRequestHeader(header, token);
             }
         });
-    };
 
-    self.getCsrf = function() {
-        $.get("./csrf", function(data) {
-            self.csrf(new CsrfToken(data));
+        $(document).ajaxError(function (event, jqxhr, settings /*, exception */) {
+            if (jqxhr.status == 401) {
+                messageModel.goToLogin();
+            } else if (jqxhr.status == 400) {
+                var errors = JSON.parse(jqxhr.responseText).errors;
+                errors.forEach(function(error) {
+                    messageModel.errors.push(error.message);
+                });
+            } else {
+                alert('Error processing ' + settings.url);
+            }
         });
-    };
-
-    self.getCurrentUser();
-}
-
-$(function () {
-  var messageModel = new MessageListViewModel();
-  $(document).ajaxSend(function(e, xhr, options) {
-    messageModel.errors.removeAll();
-    xhr.setRequestHeader( "Content-type", "application/json" );
-
-    var header = messageModel.csrf().headerName();
-    var token = messageModel.csrf().token();
-    if(token) {
-        xhr.setRequestHeader(header, token);
     }
-  });
-  $(document).ajaxError(function( event, jqxhr, settings, exception ) {
-    if (jqxhr.status == 401 ) {
-      messageModel.goToLogin();
-    } else if(jqxhr.status == 400) {
-      var errors = $.parseJSON(jqxhr.responseText)['errors'];
-      for (var i = 0; i < errors.length; i++) {
-        messageModel.errors.push(errors[i].message);
-      }
-    } else {
-      alert("Error processing "+ settings.url);
-    }
-  });
-  ko.applyBindings(messageModel)
-});
+
+}($, ko));
+
 
