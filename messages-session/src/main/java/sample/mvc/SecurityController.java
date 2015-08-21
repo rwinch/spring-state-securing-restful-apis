@@ -32,7 +32,7 @@ import sample.security.CurrentUser;
  * @author Rob Winch
  */
 @RestController
-@BasePathAwareController
+//@BasePathAwareController
 public class SecurityController {
 
     @RequestMapping(value="/authenticate", produces={MediaType.APPLICATION_JSON_VALUE, "application/hal+json"})
