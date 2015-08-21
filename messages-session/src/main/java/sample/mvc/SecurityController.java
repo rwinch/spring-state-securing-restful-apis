@@ -15,7 +15,6 @@
  */
 package sample.mvc;
 
-import org.springframework.data.rest.webmvc.BasePathAwareController;
 import org.springframework.data.rest.webmvc.PersistentEntityResourceAssembler;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
@@ -32,7 +31,6 @@ import sample.security.CurrentUser;
  * @author Rob Winch
  */
 @RestController
-@BasePathAwareController
 public class SecurityController {
 
     @RequestMapping(value="/authenticate", produces={MediaType.APPLICATION_JSON_VALUE, "application/hal+json"})

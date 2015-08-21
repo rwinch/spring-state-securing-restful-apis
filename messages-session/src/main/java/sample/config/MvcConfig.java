@@ -28,7 +28,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
 @Configuration
-@Order(Ordered.HIGHEST_PRECEDENCE   )
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class MvcConfig extends WebMvcConfigurerAdapter {
 
     @Autowired
