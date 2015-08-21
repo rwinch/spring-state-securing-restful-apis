@@ -37,7 +37,6 @@ public class WebSecurityConfig
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-            .headers().disable()
             .authorizeRequests()
                 .antMatchers("/","/resources/**", "/signup", "/csrf").permitAll()
                 .anyRequest().authenticated()

@@ -98,12 +98,12 @@
             $.ajax('users/search/findByEmail', {
                 data: { email: self.compose().toEmail() },
                 type: 'get', contentType: 'application/json'
-            }).then(function(result) {
-                if(!result._embedded) {
+            }).then(function(result, statusText, xhr) {
+                if(xhr.status != 200) {
                     return new $.Deferred().reject(new Error('Invalid user'));
                 }
 
-                self.compose().to(result._embedded.users[0]._links.self.href);
+                self.compose().to(result._links.self.href);
                 return $.ajax('messages', {
                     data: ko.toJSON(self.compose),
                     type: 'post', contentType: 'application/json'

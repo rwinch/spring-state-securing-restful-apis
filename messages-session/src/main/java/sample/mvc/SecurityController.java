@@ -34,8 +34,8 @@ import sample.security.CurrentUser;
 public class SecurityController {
 
     @RequestMapping(value="/authenticate", produces={MediaType.APPLICATION_JSON_VALUE, "application/hal+json"})
-    public ResponseEntity<Resource<?>> login(PersistentEntityResourceAssembler assembler,@CurrentUser User currentUser) {
-        return new ResponseEntity<Resource<?>>(assembler.toResource(new User(currentUser)), HttpStatus.OK);
+    public ResponseEntity<Resource<?>> login(PersistentEntityResourceAssembler assembler, @CurrentUser User currentUser) {
+        return new ResponseEntity<Resource<?>>(assembler.toFullResource(new User(currentUser)), HttpStatus.OK);
     }
 
     @RequestMapping("/csrf")
