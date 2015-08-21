@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 package sample;
-
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -39,7 +40,7 @@ import org.springframework.web.context.WebApplicationContext;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes=SpringSessionApplication.class)
 @WebAppConfiguration
-//@IntegrationTest
+@IntegrationTest
 public class SpringSessionApplicationTests {
 	@Autowired
 	WebApplicationContext wac;
@@ -56,7 +57,17 @@ public class SpringSessionApplicationTests {
 
 	@Test
 	public void csrf() throws Exception {
-		mockMvc.perform(get("/csrf"))
-			.andReturn();
+		String csrf = mockMvc.perform(get("/csrf"))
+			.andReturn().getResponse().getContentAsString();
+
+		assertThat(csrf).contains("parameterName").doesNotContain("null");
+	}
+
+	@Test
+	public void authenticate() throws Exception {
+		String user = mockMvc.perform(get("/authenticate").with(httpBasic("rob@example.com","password")))
+				.andReturn().getResponse().getContentAsString();
+
+		assertThat(user).contains("user").doesNotContain("null");
 	}
 }
