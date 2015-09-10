@@ -17,26 +17,42 @@ package sample.config;
 
 import java.util.List;
 
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.web.method.annotation.CsrfTokenArgumentResolver;
+import org.springframework.data.repository.support.Repositories;
+import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
+import org.springframework.data.rest.core.projection.ProxyProjectionFactory;
+import org.springframework.data.rest.webmvc.config.PersistentEntityResourceAssemblerArgumentResolver;
+import org.springframework.hateoas.EntityLinks;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
+
+import sample.security.CsrfTokenArgumentResolver;
 
 @Configuration
-public class MvcConfig extends WebMvcConfigurerAdapter {
+public class MvcConfig extends WebMvcConfigurerAdapter implements InitializingBean {
 
     @Autowired
-    @Qualifier("repositoryExporterHandlerAdapter")
-    RequestMappingHandlerAdapter repositoryExporterHandlerAdapter;
+    private Repositories repositories;
+    @Autowired
+    private EntityLinks entityLinks;
+    @Autowired
+    private BeanFactory beanFactory;
+    @Autowired
+    private RepositoryRestConfiguration config;
+
+
 
     @Override
     public void addArgumentResolvers(
             List<HandlerMethodArgumentResolver> argumentResolvers) {
-        List<HandlerMethodArgumentResolver> customArgumentResolvers = repositoryExporterHandlerAdapter.getCustomArgumentResolvers();
+        argumentResolvers.add(new PersistentEntityResourceAssemblerArgumentResolver(repositories, entityLinks,
+                config.projectionConfiguration(), new ProxyProjectionFactory(beanFactory)));
         argumentResolvers.add(new CsrfTokenArgumentResolver());
-        argumentResolvers.addAll(customArgumentResolvers);
+    }
+
+    public void afterPropertiesSet() {
     }
 }

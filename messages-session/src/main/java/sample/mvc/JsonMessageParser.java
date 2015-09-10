@@ -31,36 +31,37 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
 public class JsonMessageParser {
-    private final AntPathMatcher pathMatcher = new AntPathMatcher();
-    private final ObjectMapper json = new ObjectMapper();
+	private final AntPathMatcher pathMatcher = new AntPathMatcher();
+	private final ObjectMapper json = new ObjectMapper();
 
-    private final UserRepository userRepository;
+	private final UserRepository userRepository;
 
-    @Autowired
-    public JsonMessageParser(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+	@Autowired
+	public JsonMessageParser(UserRepository userRepository) {
+		this.userRepository = userRepository;
+	}
 
-    @SuppressWarnings("unchecked")
-    public Message parse(InputStream in) throws Exception {
-        Map<String,String> data = json.readValue(in, Map.class);
-        User to = getUserFromUri(data.get("to"));
-        User from = getUserFromUri(data.get("from"));
+	@SuppressWarnings("unchecked")
+	public Message parse(InputStream in) throws Exception {
+		Map<String, String> data = json.readValue(in, Map.class);
+		User to = getUserFromUri(data.get("to"));
+		User from = getUserFromUri(data.get("from"));
 
-        Message message = new Message();
-        message.setFrom(from);
-        message.setTo(to);
-        message.setSummary(data.get("summary"));
-        message.setText(data.get("text"));
+		Message message = new Message();
+		message.setFrom(from);
+		message.setTo(to);
+		message.setSummary(data.get("summary"));
+		message.setText(data.get("text"));
 
-        return message;
-    }
+		return message;
+	}
 
-    private User getUserFromUri(String userUri) throws Exception {
-        URI uri = new URI(userUri);
-        Map<String, String> extractUriTemplateVariables = pathMatcher.extractUriTemplateVariables("/users/{id}", uri.getPath());
-        String idString = extractUriTemplateVariables.get("id");
-        Long id = Long.parseLong(idString);
-        return userRepository.findOne(id);
-    }
+	private User getUserFromUri(String userUri) throws Exception {
+		URI uri = new URI(userUri);
+		Map<String, String> extractUriTemplateVariables = pathMatcher.extractUriTemplateVariables("/users/{id}",
+				uri.getPath());
+		String idString = extractUriTemplateVariables.get("id");
+		Long id = Long.parseLong(idString);
+		return userRepository.findOne(id);
+	}
 }

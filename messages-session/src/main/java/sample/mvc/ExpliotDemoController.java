@@ -15,6 +15,8 @@
  */
 package sample.mvc;
 
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -22,28 +24,47 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import sample.data.Message;
 import sample.data.MessageRepository;
 
 @Controller
 public class ExpliotDemoController {
-    private final MessageRepository messageRepository;
-    private final JsonMessageParser messageParser;
+	private final MessageRepository messageRepository;
+	private final JsonMessageParser messageParser;
 
-    @Autowired
-    public ExpliotDemoController(MessageRepository messageRepository,JsonMessageParser messageParser) {
-        super();
-        this.messageRepository = messageRepository;
-        this.messageParser = messageParser;
-    }
+	@Autowired
+	public ExpliotDemoController(MessageRepository messageRepository, JsonMessageParser messageParser) {
+		super();
+		this.messageRepository = messageRepository;
+		this.messageParser = messageParser;
+	}
 
-    @RequestMapping(value="/csrf/messages/", method=RequestMethod.POST)
-    public void exploit(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        Message messageToSave = messageParser.parse(request.getInputStream());
+	@RequestMapping(value = "/csrf/messages/", method = RequestMethod.POST)
+	public void exploit(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		Message messageToSave = messageParser.parse(request.getInputStream());
 
-        messageRepository.save(messageToSave);
+		messageRepository.save(messageToSave);
 
-        response.sendRedirect(request.getContextPath());
-    }
+		String contextPath = request.getContextPath();
+		if ("".equals(contextPath)) {
+			contextPath = "/";
+		}
+		response.sendRedirect(contextPath);
+	}
+
+	@RequestMapping("/xss")
+	public String xss(@RequestParam(defaultValue = "120") Long id, Map<String, Object> model) {
+		Message message = messageRepository.findOne(id);
+		model.put("message", message);
+		return "xss/jsp";
+	}
+
+	@RequestMapping("/fixxss")
+	public String fixxss(@RequestParam(defaultValue = "120") Long id, Map<String, Object> model) {
+		Message message = messageRepository.findOne(id);
+		model.put("message", message);
+		return "xss/fix";
+	}
 }

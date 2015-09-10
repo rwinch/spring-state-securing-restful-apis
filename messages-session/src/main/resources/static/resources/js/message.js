@@ -20,6 +20,19 @@
         this.from = ko.observable(data.from);
     }
 
+    function SessionInfo(data) {
+    	var self = this;
+    	this.accessType = ko.observable(data.accessType);
+    	this.created = ko.observable(moment(data.created).fromNow());
+    	this.id = ko.observable(data.id);
+    	this.location = ko.observable(data.location);
+    	this.lastUpdated = ko.observable(moment(data.lastUpdated).fromNow());
+        this.information = ko.observable(data.accessType);
+        this.idSuffix = ko.computed(function() {
+        	return self.id().substring(0,4);
+        });
+    }
+
     function ComposeMessage(data) {
         this.text = ko.observable(data.text);
         this.summary = ko.observable(data.summary);
@@ -37,6 +50,7 @@
         this.errors = ko.observableArray([]);
         this.user = ko.observable(new User({}));
         this.login = ko.observable();
+        this.sessions = ko.observable();
         this.csrf = ko.observable(new CsrfToken({}));
 
         var self = this;
@@ -86,7 +100,13 @@
             self.login(new User({email:'rob@example.com',password:'password'}));
         };
 
+        self.goToSessions = function() {
+            self.clearPages();
+            self.getAccountActivity();
+        };
+
         self.clearPages = function() {
+            self.sessions(null);
             self.login(null);
             self.inbox(null);
             self.sent(null);
@@ -125,6 +145,12 @@
             return $.ajax(message.href(), { type: 'delete', contentType: 'application/json'});
         };
 
+        self.deleteSession = function(session) {
+        	return $.ajax('./sessions/', { type: 'delete', dataType: 'json', headers : { 'x-auth-token' : session.id()}}).then(function() {
+        		self.goToSessions();
+        	});
+        }
+
         self.performLogin = function() {
             var login = self.login();
             return self.getCurrentUser(login.email(),login.password());
@@ -139,13 +165,21 @@
         self.getCurrentUser = function(username, password) {
             self.user(new User({}));
 
-            var additionalHeaders = username ? {
+            var loginAttempt = username != null;
+            var additionalHeaders = loginAttempt ? {
                 'Authorization': 'Basic ' + btoa(username + ':' + password)
             } : {};
+            var errorHandler = loginAttempt ? function(e) {
+                if(e.status == 401) {
+                    self.errors.push('Invalid username/password');
+                }
+            } : function(e) {};
 
-            return $.ajax('authenticate', {
+            return $.ajax('users/search/findByEmail', {
                 headers: additionalHeaders,
-                type: 'get', contentType: 'application/json'
+                data : {email : 'rob@example.com'},
+                type: 'get', contentType: 'application/json',
+                error : errorHandler
             }).then(function(result) {
                 self.csrf(new CsrfToken({}));
                 self.user(new User(result));
@@ -159,7 +193,15 @@
             });
         };
 
-        this.getCurrentUser();
+        self.getAccountActivity = function() {
+            $.get('sessions/', function(data) {
+                var sessionInfos = data.map(function (item) {
+                    return new SessionInfo(item);
+                });
+                self.sessions(sessionInfos);
+            });
+        };
+
     }
 
     $(function () {
@@ -174,6 +216,7 @@
         $(document).ajaxSend(function (e, xhr /*, options */) {
             messageModel.errors.removeAll();
             xhr.setRequestHeader('Content-type', 'application/json');
+            xhr.setRequestHeader('Accept', 'application/json');
 
             var header = messageModel.csrf().headerName();
             var token = messageModel.csrf().token();

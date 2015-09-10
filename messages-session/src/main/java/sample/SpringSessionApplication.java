@@ -16,19 +16,15 @@
 package sample;
 
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * @author Rob Winch
  */
-@Configuration
-@ComponentScan
-@EnableAutoConfiguration
+@SpringBootApplication
 public class SpringSessionApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(SpringSessionApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(SpringSessionApplication.class, args);
+	}
 }

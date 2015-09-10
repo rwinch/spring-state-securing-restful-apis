@@ -18,7 +18,6 @@ package sample.mvc;
 import org.springframework.data.rest.webmvc.PersistentEntityResourceAssembler;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,13 +32,15 @@ import sample.security.CurrentUser;
 @RestController
 public class SecurityController {
 
-    @RequestMapping(value="/authenticate", produces={MediaType.APPLICATION_JSON_VALUE, "application/hal+json"})
-    public ResponseEntity<Resource<?>> login(PersistentEntityResourceAssembler assembler, @CurrentUser User currentUser) {
-        return new ResponseEntity<Resource<?>>(assembler.toFullResource(new User(currentUser)), HttpStatus.OK);
-    }
+	@RequestMapping(value = "/authenticate")
+	public ResponseEntity<Resource<?>> login(PersistentEntityResourceAssembler assembler,
+			@CurrentUser User currentUser) {
 
-    @RequestMapping("/csrf")
-    public CsrfToken csrf(CsrfToken token) {
-        return token;
-    }
+		return new ResponseEntity<Resource<?>>(assembler.toFullResource(new User(currentUser)), HttpStatus.OK);
+	}
+
+	@RequestMapping("/csrf")
+	public CsrfToken csrf(CsrfToken token) {
+		return token;
+	}
 }

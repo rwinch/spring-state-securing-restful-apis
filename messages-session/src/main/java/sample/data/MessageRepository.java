@@ -17,9 +17,10 @@ package sample.data;
 
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.security.access.method.P;
-import org.springframework.security.access.prepost.PostAuthorize;
-import org.springframework.security.access.prepost.PreAuthorize;
+
+import sample.security.ReadableMessage;
 
 /**
  * Manages {@link Message} instances
@@ -27,25 +28,21 @@ import org.springframework.security.access.prepost.PreAuthorize;
  * @author Rob Winch
  *
  */
-@PreAuthorize("denyAll")
 public interface MessageRepository extends CrudRepository<Message, Long> {
 
-    @PreAuthorize("authenticated")
-    @Query("select m from Message m where m.to.id = ?#{principal.id}")
-    Iterable<Message> inbox();
+	@Query("select m from Message m where m.to.id = ?#{principal.id}")
+	Iterable<Message> inbox();
 
-    @PreAuthorize("authenticated")
-    @Query("select m from Message m where m.from.id = ?#{principal.id}")
-    Iterable<Message> sent();
+	@Query("select m from Message m where m.from.id = ?#{principal.id}")
+	Iterable<Message> sent();
 
-    @PreAuthorize("authenticated")
-    @PostAuthorize("hasPermission(returnObject,'read')")
-    Message findOne(Long id);
+	@ReadableMessage
+	Message findOne(@Param("id") Long id);
 
-    @PreAuthorize("authenticated")
-    @PostAuthorize("#message?.from?.id == principal?.id")
-    <S extends Message> S save(@P("message") S message);
+	@ReadableMessage
+	Message findBySummary(@Param("summary") String summary);
 
-    @PreAuthorize("authenticated")
-    void delete(Long id);
+	<S extends Message> S save(@P("message") S message);
+
+	void delete(Long id);
 }

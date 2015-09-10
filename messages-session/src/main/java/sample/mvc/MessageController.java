@@ -30,8 +30,8 @@ import sample.data.Message;
 @RequestMapping("/")
 public class MessageController {
 
-    @RequestMapping(value="/",produces="text/html")
-    public String inbox() {
-        return "messages/inbox";
-    }
+	@RequestMapping(value = "/", produces = "text/html")
+	public String inbox() {
+		return "messages/inbox";
+	}
 }

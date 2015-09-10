@@ -11,3 +11,5 @@ insert into message(id,created,to_id,from_id,summary,text) values (111,'2014-07-
 insert into message(id,created,to_id,from_id,summary,text) values (112,'2014-07-12 10:00:00',1,0,'Is this secure?','This message is for Luke');
 
 insert into message(id,created,to_id,from_id,summary,text) values (120,'2014-07-12 10:00:00',2,2,'Hello Self','Ready to Hack!');
+insert into message(id,created,to_id,from_id,summary,text) values (121,'2014-07-12 10:00:00',0,2,'XSS in Script','<script>alert(''xss'');</script>');
+insert into message(id,created,to_id,from_id,summary,text) values (122,'2014-07-12 10:00:00',0,2,'XSS in HTML',''');document.write(''thank you come again'');//');
